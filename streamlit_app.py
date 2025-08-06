@@ -278,7 +278,7 @@ A: Tokyo
         with st.expander("📲 Share Game Link & QR Code"):
             # This assumes your app is deployed at a public URL.
             # You might need to manually set this URL if running locally.
-            app_url = st.text_input("Paste your App's Public URL here:", "https://your-app-name.streamlit.app")
+            app_url = st.text_input("Paste your App's Public URL here:", "https://blank-app-1qkt7inbvwj.streamlit.app/")
             if app_url:
                 st.markdown(f"**Direct Link:** [{app_url}]({app_url})")
                 qr_img = qrcode.make(app_url)
