@@ -1,5 +1,2 @@
 streamlit
-time
-random
-string
-google.cloud.firestore
+google-cloud-firestore
