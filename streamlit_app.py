@@ -229,20 +229,22 @@ O: Tokyo
 A: Tokyo
                 """, language="text")
 
-            if st.button("Create New Game", use_container_width=True) and host_name and uploaded_file:
-                try:
-                    stringio = io.StringIO(uploaded_file.getvalue().decode("utf-8"))
-                    text_contents = stringio.read()
-                    quiz_data = parse_text_quiz(text_contents)
-                    if quiz_data:
-                        st.session_state.game_pin = create_game_session(host_name, quiz_data)
-                        st.rerun()
-                    else:
-                        st.error("Invalid TXT format or empty file.")
-                except Exception as e:
-                    st.error(f"An error occurred: {e}")
-            elif st.button("Create New Game", use_container_width=True):
-                st.warning("Please enter your name and upload a quiz file.")
+            # --- FIX: Use a single button and check conditions inside ---
+            if st.button("Create New Game", use_container_width=True):
+                if host_name and uploaded_file:
+                    try:
+                        stringio = io.StringIO(uploaded_file.getvalue().decode("utf-8"))
+                        text_contents = stringio.read()
+                        quiz_data = parse_text_quiz(text_contents)
+                        if quiz_data:
+                            st.session_state.game_pin = create_game_session(host_name, quiz_data)
+                            st.rerun()
+                        else:
+                            st.error("Invalid TXT format or empty file.")
+                    except Exception as e:
+                        st.error(f"An error occurred: {e}")
+                else:
+                    st.warning("Please enter your name and upload a quiz file.")
     else:
         game_pin = st.session_state.game_pin
         game_state = get_game_state(game_pin)
