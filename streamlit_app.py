@@ -3,7 +3,11 @@ import time
 import random
 import string
 import io
-# You need to install this library: pip install google-cloud-firestore
+import qrcode
+from PIL import Image
+
+# You need to install these libraries:
+# pip install google-cloud-firestore qrcode Pillow
 from google.cloud import firestore
 
 # --- Page Configuration ---
@@ -194,18 +198,36 @@ def show_leaderboard(players):
 # --- Main App Logic ---
 st.title("🚀 Streamlit Kahoot Clone")
 
-if 'role' not in st.session_state: st.session_state.role = None
+if 'role' not in st.session_state:
+    st.session_state.role = None
+    st.session_state.show_host_password_prompt = False
 
 if st.session_state.role is None:
-    with st.container(border=True):
-        st.header("👋 Welcome! Are you a Host or a Player?")
-        col1, col2 = st.columns(2)
-        if col1.button("👩‍🏫 I am the Host", use_container_width=True):
-            st.session_state.role = "host"
-            st.rerun()
-        if col2.button("🧑‍🎓 I am a Player", use_container_width=True, type="secondary"):
-            st.session_state.role = "player"
-            st.rerun()
+    # --- MODIFIED: Role Selection with Password ---
+    if st.session_state.show_host_password_prompt:
+        with st.container(border=True):
+            st.header("🔑 Host Login")
+            password = st.text_input("Enter Host Password:", type="password")
+            if st.button("Login"):
+                if "HOST_PASSWORD" in st.secrets and password == st.secrets["HOST_PASSWORD"]:
+                    st.session_state.role = "host"
+                    st.session_state.show_host_password_prompt = False
+                    st.rerun()
+                else:
+                    st.error("Incorrect password.")
+            if st.button("Back"):
+                st.session_state.show_host_password_prompt = False
+                st.rerun()
+    else:
+        with st.container(border=True):
+            st.header("👋 Welcome! Are you a Host or a Player?")
+            col1, col2 = st.columns(2)
+            if col1.button("👩‍🏫 I am the Host", use_container_width=True):
+                st.session_state.show_host_password_prompt = True
+                st.rerun()
+            if col2.button("🧑‍🎓 I am a Player", use_container_width=True, type="secondary"):
+                st.session_state.role = "player"
+                st.rerun()
 
 # --- HOST VIEW ---
 elif st.session_state.role == "host":
@@ -229,7 +251,6 @@ O: Tokyo
 A: Tokyo
                 """, language="text")
 
-            # --- FIX: Use a single button and check conditions inside ---
             if st.button("Create New Game", use_container_width=True):
                 if host_name and uploaded_file:
                     try:
@@ -252,8 +273,20 @@ A: Tokyo
 
         st.header(f"Host Dashboard 🎮")
         st.markdown(f"<div class='game-pin-display'>{game_pin}</div>", unsafe_allow_html=True)
-        st.info("Share this PIN with your players!")
-        
+
+        # --- NEW: QR Code and Link Sharing ---
+        with st.expander("📲 Share Game Link & QR Code"):
+            # This assumes your app is deployed at a public URL.
+            # You might need to manually set this URL if running locally.
+            app_url = st.text_input("Paste your App's Public URL here:", "https://your-app-name.streamlit.app")
+            if app_url:
+                st.markdown(f"**Direct Link:** [{app_url}]({app_url})")
+                qr_img = qrcode.make(app_url)
+                # Convert to a format that st.image can display
+                buf = io.BytesIO()
+                qr_img.save(buf, format="PNG")
+                st.image(buf, caption="Scan to join the game")
+
         show_leaderboard(game_state.get("players", {}))
         current_q_index = game_state.get("current_question_index", -1)
 
